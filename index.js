@@ -1,5 +1,4 @@
-const PriceWatcher = require('./price-watcher');
-const priceWatcher = new PriceWatcher(console, 'BTCUSDT');
+const Api = require('./mock-api');
 
 priceWatcher.getPrice().then((price) => {
     console.log("Current price: "+price)

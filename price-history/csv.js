@@ -19,7 +19,7 @@ class CsvPriceHistory {
         this.to = to;
         this.data = [];
         this.limit = limit;
-        this.timeFrom = timeFrom;
+        this.timeFrom = CsvPriceHistory.getTimestamp(timeFrom);
         this.started = false;
         this.done = false;
         this.promise = new Promise(r => setTimeout(r, 500));
@@ -62,18 +62,13 @@ class CsvPriceHistory {
     //2013-10-01
     static getTimestamp(date=null){
         if(!date){
-            let timestamp = new Date();
-            date = {};
-            date.year = timestamp.getFullYear();
-            date.month = timestamp.getMonth();
-            date.day = timestamp.getDay();
+            date = new Date();
         }
-        else{
-            if(!date.year || !date.month || !date.day){
-                throw new Error("Date not correct");
-            }
-        }
-        return `${date.year}-`+("00"+date.month).slice(-2)+"-"+("00"+date.day).slice(-2);
+        let timestamp = {};
+        timestamp.year = date.getFullYear();
+        timestamp.month = date.getMonth();
+        timestamp.day = date.getDay();
+        return `${timestamp.year}-`+("00"+timestamp.month).slice(-2)+"-"+("00"+timestamp.day).slice(-2);
     }
 }
 
