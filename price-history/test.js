@@ -6,21 +6,30 @@ const sinonChai = require('sinon-chai');
 chai.use(require('chai-as-promised'));
 chai.use(sinonChai)
 
-const PriceHistory = require('./price-history.js');
+const PriceHistory = require('./csv.js');
+let step = { day: 1, hour: 0, minute: 0};
+//const PriceHistory = require('./cryptocompare.js');
+// let step = { day: 0, hours: 1, minute: 0};
 
 describe('PriceHistory', function() {
-    it('should be synchronized', async function() {
-        var start = new Date(2018, 1, 1).getTime() / 1000;
-        start = Math.ceil(start/3600)*3600;
+    this.timeout(5000);
+    it('should return same time', async function() {
+        var start = PriceHistory.getTimestamp({year: 2018, month: 1, day: 1});
         let ph = new PriceHistory(console, "BTC", "USD", start, 1);
         for(let i=0; i<5; i++){
-            await ph.promise;
-            expect(ph.data[0].time).to.be.equal(start+i*3600);
-            await ph.getPrice();
+            let next = PriceHistory.getTimestamp({year: 2018, month: 1, day: 1+step.day*i, hours: 0+step.hour*i});
+            let t = await ph.getPriceAndTime();
+            expect(t.time).to.be.equal(next);
         }
     })
+    // it('should be synchronized', async function() {
+    //     var start = PriceHistory.getTimestamp();
+    //     let ph = new PriceHistory(console, "BTC", "USD", null, 1);
+    //     let t = await ph.getPriceAndTime();
+    //     expect(t.time).to.be.equal(start);
+    // })
     it('Should return price', async function() {
-        var start = new Date(2018, 1, 1).getTime() / 1000;
+        var start = PriceHistory.getTimestamp({year: 2018, month: 1, day: 1});
         let ph = new PriceHistory(console, "BTC", "USD", start, 2);
         let prices = [];
         for(let i = 0; i<10; i++){

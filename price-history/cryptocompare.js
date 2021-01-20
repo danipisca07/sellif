@@ -7,10 +7,44 @@ const axios = require('axios');
     //&aggregate=1
     //&toTs=1452680400
     //&api_key=API_KEY
-const API_KEY = process.env.API_KEY;
+const API_KEY = process.env.CRYPTOCOMPARE_KEY;
 const url = 'https://min-api.cryptocompare.com/data/v2/histohour';
 
-class PriceHistory {
+/*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*           THIS IS CURRENTLY BUGGED! TIME IS NOT SYNCHED FOR SOME REASON, DONT USE!
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*/
+class CryptoComparePriceHistory {
     constructor(logger, from, to, timeFrom=null, limit=100){
         this.logger = logger;
         this.from = from;
@@ -19,7 +53,7 @@ class PriceHistory {
         this.limit = limit;
         this.timeFrom = null;
         if(timeFrom!=null){
-            this.timeFrom = this.roundToMultiple(timeFrom);
+            this.timeFrom = CryptoComparePriceHistory.roundToMultiple(timeFrom);
             this.timeFrom +=this.limit*60*60;
         }
         this.promise = this.updateData();
@@ -49,19 +83,46 @@ class PriceHistory {
 
     async getPrice(){
         return new Promise(async (resolve, reject) => {
+            let t = await this.getPriceAndTime();
+            resolve(t.price);
+        });
+    }
+
+    async getPriceAndTime(){
+        return new Promise(async (resolve, reject) => {
             if(this.data.length == 0){
                 await this.promise;
             }
-            resolve(this.data.shift().close);
+            let t = this.data.shift();
+            resolve({price: t.close, time: t.time});
             if(this.data.length == 0){
                 this.promise = this.updateData();
             }
         });
     }
 
-    roundToMultiple(x){
-        return Math.ceil(x/3600)*3600;
+    static getTimestamp(date=null){
+        let timestamp;
+        if(!date)
+            timestamp = new Date().getTime() / 1000;
+        else{
+            if(!date.year || !date.month || !date.day){
+                throw new Error("Date not correct");
+            }
+            if(!date.hours)
+                date.hours = 0;
+            if(!date.minutes)
+                date.minutes = 0;
+            timestamp = new Date(date.year, date.month, date.day, date.hours, date.minutes).getTime() / 1000;
+        }
+        return CryptoComparePriceHistory.roundToMultiple(timestamp);
     }
+
+    static roundToMultiple(x){
+        return Math.floor(x/3600)*3600;
+    }
+
+
 }
 
-module.exports = PriceHistory;
+module.exports = CryptoComparePriceHistory;
