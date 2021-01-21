@@ -1,42 +1,15 @@
+const SweetRebuy = require('./sweet-rebuy');
 const Api = require('./mock-api');
 
-priceWatcher.getPrice().then((price) => {
-    console.log("Current price: "+price)
-});
+let start = new Date(2018, 6, 1);
+let trail = 1000;
+let fee = 0.1 / 100;
+let balances = {
+    BTC: 1,
+    USD: 0
+};
+let mocklog = { info: () => {} };
+let api = new Api(mocklog, start, balances, fee);
+let strat = new SweetRebuy(console, api, trail, fee);
 
-function sell(price, quantity, fee){
-    return (price/quantity) * (1-fee);
-}
-
-function buy(price, fiatQuantity, fee){
-    return (fiatQuantity/price) * (1-fee); 
-}
-
-function sweets(price, sellFee, buyFee){
-    let rebuyEven = price * (1-sellFee-buyFee+sellFee*buyFee);
-    return rebuyEven;
-}
-
-function calculate(price, rebuyPrice, sellFee, buyFee){
-    let initialQ = 1;
-    let fiat = sell(price, initialQ, sellFee);    
-    let finalQ = buy(rebuyPrice, fiat, buyFee);
-
-    let loss = (initialQ-finalQ)*100;
-    if(loss < 0.0000000000001) loss = 0;
-    console.log(`Sold at ${price} and rebuy at ${rebuyPrice} to lose ${loss}%`);
-    return finalQ
-}
-
-let price = 32500;
-let sellFee = 0.1 / 100;
-let buyFee = 0.1 / 100;
-
-let breakEven = sweets(price, sellFee, buyFee);
-let fomo = price + (price - breakEven)
-calculate(price, breakEven, sellFee, buyFee);
-calculate(price, fomo, sellFee, buyFee);
-
-
-
-
+strat.run();

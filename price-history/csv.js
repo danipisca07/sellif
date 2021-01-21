@@ -67,7 +67,7 @@ class CsvPriceHistory {
         let timestamp = {};
         timestamp.year = date.getFullYear();
         timestamp.month = date.getMonth();
-        timestamp.day = date.getDay();
+        timestamp.day = date.getDate();
         return `${timestamp.year}-`+("00"+timestamp.month).slice(-2)+"-"+("00"+timestamp.day).slice(-2);
     }
 }
