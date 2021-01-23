@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const axios = require('axios');
-const { reject } = require('lodash');
+const { reject, identity } = require('lodash');
 const { resolve } = require('path');
 const flatted = require('flatted');
 
@@ -68,9 +68,24 @@ const Cacher = {
             if(path != "") path+= "/";
             let parsed = t.replace("http:","");
             parsed = parsed.replace("https:", "");
-            parsed = parsed.replace("?","/");
             parsed = parsed.replace(/:/g, "");
-            path += parsed;
+            if(parsed.includes("?")){
+                let tokens = parsed.split("?");
+                path += tokens[0];
+                let params = tokens[1].split("&");
+                for(let i=0, passed=0; i<params.length; i++) {
+                    let name = params[i].split("=")[0];
+                    if(name !== "apikey" && name !== "api_key"){
+                        if(passed === 0){
+                            path += "/"+params[i];
+                        }else {
+                            path += "&"+params[i];
+                        }
+                        passed++;
+                    }
+                }
+            } else
+                path += parsed;
         });
         return Cacher.CACHE_FOLDER+path+".json";
     }

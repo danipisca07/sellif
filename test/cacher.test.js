@@ -11,10 +11,12 @@ const Cacher = require('../api/cacher.js');
 describe('Cacher', function() {
     it('should parse correctly', function() {
         const tests = [
-            [ "http://test/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test/path/string/test=2&re&re.json" ],
-            [ "https://test/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test/path/string/test=2&re&re.json" ],
-            [ "test/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test/path/string/test=2&re&re.json" ],
-            [ "http://test/path/string/" , Cacher.CACHE_FOLDER+"test/path/string.json" ],
+            [ "http://test1/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test1/path/string/test=2&re&re.json" ],
+            [ "https://test2/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test2/path/string/test=2&re&re.json" ],
+            [ "test3/path/string?test=2&re&re" , Cacher.CACHE_FOLDER+"test3/path/string/test=2&re&re.json" ],
+            [ "http://test4/path/string/" , Cacher.CACHE_FOLDER+"test4/path/string.json" ],
+            [ "http://test5/path/string?test=2:2&api_key=2wqe2e" , Cacher.CACHE_FOLDER+"test5/path/string/test=22.json" ],
+            [ "http://test6/path/string?api_key=2wqe2e&test=qwe" , Cacher.CACHE_FOLDER+"test6/path/string/test=qwe.json" ],
         ];
         tests.forEach((t) =>{
             expect(Cacher.getPath(t[0])).to.be.equal(t[1]);
