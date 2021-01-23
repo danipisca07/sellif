@@ -11,7 +11,8 @@ class MockApi {
     }
 
     async getCurrentPrice(){
-        return this.api.getPrice();
+        let tmp = await this.api.getPriceAndTime();
+        return tmp.price;
     }
 
     async trade(typeSold, typeBought, quantity, price){

@@ -81,13 +81,6 @@ class CryptoComparePriceHistory {
         });
     }
 
-    async getPrice(){
-        return new Promise(async (resolve, reject) => {
-            let t = await this.getPriceAndTime();
-            resolve(t.price);
-        });
-    }
-
     async getPriceAndTime(){
         return new Promise(async (resolve, reject) => {
             if(this.data.length == 0){

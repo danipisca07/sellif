@@ -36,17 +36,6 @@ class CsvPriceHistory {
                 });
     }
 
-    async getPrice(){
-        return new Promise(async (resolve, reject) => {
-            try {
-                let t = await this.getPriceAndTime();
-                resolve(t.price);
-            }catch(err){
-                reject(err);
-            }            
-        });
-    }
-
     async getPriceAndTime(){
         return new Promise(async (resolve, reject) => {
             while(this.data.length == 0){
@@ -56,7 +45,8 @@ class CsvPriceHistory {
             }
             let t = this.data.shift();
             let price = parseFloat(t['Closing Price (USD)']);
-            let time = t.Date;
+            let tokens = t.Date.split('-');
+            let time = new Date(tokens[0], tokens[1]-1, tokens[2]);
             resolve({price,time});
         });
     }
@@ -70,7 +60,7 @@ class CsvPriceHistory {
         timestamp.year = date.getFullYear();
         timestamp.month = date.getMonth();
         timestamp.day = date.getDate();
-        return `${timestamp.year}-`+("00"+timestamp.month).slice(-2)+"-"+("00"+timestamp.day).slice(-2);
+        return `${timestamp.year}-`+("00"+(timestamp.month+1)).slice(-2)+"-"+("00"+timestamp.day).slice(-2);
     }
 }
 

@@ -12,14 +12,14 @@ let step = { day: 1, hour: 0, minute: 0};
 // let step = { day: 0, hours: 1, minute: 0};
 
 describe('PriceHistory', function() {
-    this.timeout(5000);
+    this.timeout(60000);
     it('should return same time', async function() {
-        var start = {year: 2018, month: 1, day: 1};
-        let ph = new PriceHistory(console, "BTC", "USD", start, 1);
+        var start = new Date(2018, 1, 1);
+        let ph = new PriceHistory(console, "BTC", "USDT", start, 10);
         for(let i=0; i<5; i++){
-            let next = PriceHistory.getTimestamp({year: 2018, month: 1, day: 1+step.day*i, hours: 0+step.hour*i});
+            let date = new Date(2018, 1, 1+step.day*i, 0+step.hour*i, 0+step.minute*i);
             let t = await ph.getPriceAndTime();
-            expect(t.time).to.be.equal(next);
+            expect(t.time.getTime()).to.be.equal(date.getTime());
         }
     })
     // it('should be synchronized', async function() {
@@ -29,12 +29,21 @@ describe('PriceHistory', function() {
     //     expect(t.time).to.be.equal(start);
     // })
     it('Should return price', async function() {
-        var start = {year: 2018, month: 1, day: 1};
-        let ph = new PriceHistory(console, "BTC", "USD", start, 2);
-        let prices = [];
+        var start = new Date(2018, 1, 1);
+        let ph = new PriceHistory(console, "BTC", "USDT", start, 20);
+        let res = [];
         for(let i = 0; i<10; i++){
-            prices.push(await ph.getPrice());
+            res.push(await ph.getPriceAndTime());
         }
-        expect(prices).to.be.an('array');
+        expect(res).to.be.an('array');
+    })
+    it('Should return very old price', async function() {
+        var start = new Date(2016, 1, 1);
+        let ph = new PriceHistory(console, "BTC", "USDT", start, 20);
+        let res = [];
+        for(let i = 0; i<40; i++){
+            res.push(await ph.getPriceAndTime());
+        }
+        expect(res).to.be.an('array');
     })
 })

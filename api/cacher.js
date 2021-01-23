@@ -69,6 +69,7 @@ const Cacher = {
             let parsed = t.replace("http:","");
             parsed = parsed.replace("https:", "");
             parsed = parsed.replace("?","/");
+            parsed = parsed.replace(":", "");
             path += parsed;
         });
         return Cacher.CACHE_FOLDER+path+".json";
