@@ -6,10 +6,14 @@ const sinonChai = require('sinon-chai');
 chai.use(require('chai-as-promised'));
 chai.use(sinonChai)
 
-const PriceHistory = require('../price-history/csv.js');
-let step = { day: 1, hour: 0, minute: 0};
+// const PriceHistory = require('../price-history/csv.js');
+// let step = { day: 1, hour: 0, minute: 0};
 //const PriceHistory = require('../price-history/cryptocompare.js');
 // let step = { day: 0, hours: 1, minute: 0};
+// const PriceHistory = require('../price-history/cryptowatcher.js');
+// let step = { day: 0, hour: 0, minute: 1};
+const PriceHistory = require('../price-history/coinapi.js');
+let step = { day: 0, hour: 0, minute: 1};
 
 describe('PriceHistory', function() {
     this.timeout(60000);
