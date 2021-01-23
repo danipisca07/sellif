@@ -1,6 +1,6 @@
 require('dotenv').config();
 const csv = require('csv-parser');
-const { resolveSoa } = require('dns');
+const NoData = require('../Exceptions/NoData');
 const fs = require('fs');
 //https://min-api.cryptocompare.com/data/v2/histohour
     //?fsym=BTC
@@ -50,6 +50,8 @@ class CsvPriceHistory {
     async getPriceAndTime(){
         return new Promise(async (resolve, reject) => {
             while(this.data.length == 0){
+                if(this.done)
+                    reject(new NoData('No more data'));
                 await new Promise(r => setTimeout(r, 500));
             }
             let t = this.data.shift();

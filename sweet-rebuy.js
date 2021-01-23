@@ -1,4 +1,6 @@
-const TIME_BETWEEN_UPDATES = 1000;
+const NoData = require("./Exceptions/NoData");
+
+const TIME_BETWEEN_UPDATES = 2;
 const STAGES = Object.freeze({
     INITIAL: 'initial',
     SOLD: 'sold',
@@ -6,7 +8,7 @@ const STAGES = Object.freeze({
 });
 
 class sweetRebuy {
-    constructor(logger, api, trail, fee) {
+    constructor(logger, api, trail, fee, whenDone) {
         this.logger = logger;
         this.api = api;
         this.traded = 'BTC';
@@ -17,28 +19,46 @@ class sweetRebuy {
         this.stage = STAGES.INITIAL;
         this.fee = fee;
         this.historyPrice = [];
+        if(whenDone == null) whenDone = () => {};
+        this.whenDone = whenDone;
     }
     async run() {
         let currentPrice = await this.api.getCurrentPrice();
         this.logger.info(`Initial price: ${currentPrice}`);
         this.stopLoss = currentPrice-this.trail;
         this.logger.info(`Initial stop loss set to: ${this.stopLoss}`);
+        this.logger.info("__________");
         this.interval = setInterval((() => {
             this.check();
         }).bind(this), TIME_BETWEEN_UPDATES);
     }
     async check() {
-        let currentPrice = await this.api.getCurrentPrice(this.traded);
-        this.historyPrice.push(currentPrice);
-        if(this.historyPrice.length > 50) this.historyPrice.shift();
-        if (this.condition(currentPrice)) {
-            let tradeok = await this.trade(currentPrice);
-            //TODO: Check trade condition
-            this.changeStage(currentPrice);
-            this.logger.info("__________");
+        try {
+            let currentPrice = await this.api.getCurrentPrice(this.traded);
+            this.historyPrice.push(currentPrice);
+            if(this.historyPrice.length > 50) this.historyPrice.shift();
+            if (this.condition(currentPrice)) {
+                let nextStage = this.getNextStage(currentPrice);
+                let tradeok = await this.trade(currentPrice, nextStage);
+                this.changeStage(currentPrice, nextStage);
+                //TODO: Check trade condition
+                this.logger.info("__________");
+            }
+        } catch(err){
+            if(err instanceof NoData){
+                clearInterval(this.interval);   
+                this.whenDone();            
+            }
+            else
+                this.logger.info(err);
         }
+        
     }
 
+    /**
+     * 
+     * @param {*} price 
+     */
     condition(price) {
         if (this.stage === STAGES.INITIAL) {
             return price < this.stopLoss;
@@ -63,41 +83,64 @@ class sweetRebuy {
         }
     }
 
-    changeStage(price){
+    /**
+     * 
+     * @param {*} price 
+     */
+    getNextStage(price){
         if(this.stage === STAGES.INITIAL){
-            this.stage = STAGES.SOLD;
+            return STAGES.SOLD;
+        } else if(this.stage === STAGES.SOLD){
+            if(price > this.fomo){
+                return STAGES.INITIAL;
+            } else if (price < this.reenter) {
+                return STAGES.IN_GAIN;
+            }
+        } else if(this.stage === STAGES.IN_GAIN){
+            return STAGES.INITIAL;
+        }
+    }
+
+    /**
+     * 
+     * @param {*} price 
+     * @param {*} nextStage 
+     */
+    changeStage(price, nextStage){
+        if(nextStage === STAGES.INITIAL){
+            this.stopLoss = price-this.trail;
+            this.logger.info(`Change stage to INITIAL. stopLoss at ${this.stopLoss}`);
+        } else if(nextStage === STAGES.SOLD){
             this.reenter = this.getPriceToRebuyEven(price, this.fee);
             this.fomo = this.getPriceFomo(price, this.reenter);
             this.lastTradePrice = price;
             this.logger.info(`Change stage to SOLD. Fomo at: ${this.fomo} Break-even at: ${this.reenter}`);
-        } else if(this.stage === STAGES.SOLD){
-            if(price > this.fomo){
-                this.stage = STAGES.INITIAL;
-                this.stopLoss = price-this.trail;
-                this.logger.info(`Change stage to INITIAL. stopLoss at ${this.stopLoss}`);
-            } else if (price < this.reenter) {
-                this.stage = STAGES.IN_GAIN;
-                this.reenter = price-this.trail;
-                this.logger.info(`Change stage to IN_GAIN. Re-enter at: ${this.reenter}`);
-            }
-        } else if(this.stage === STAGES.IN_GAIN){
-            this.stage = STAGES.INITIAL;
-            this.stopLoss = price-this.trail;
-            this.logger.info(`Change stage to INITIAL. stopLoss at: ${this.stopLoss}`);
+        } else if(nextStage === STAGES.IN_GAIN){
+            this.reenter = price-this.trail;
+            this.logger.info(`Change stage to IN_GAIN. Re-enter at: ${this.reenter}`);
         }
+        this.stage = nextStage;
     }
 
-    async trade(price) {
+    /**
+     * 
+     * @param {*} price 
+     * @param {*} nextStage 
+     */
+    async trade(price, nextStage) {
         return new Promise(async (res) => {
-            if(this.stage === STAGES.INITIAL){
+            if(nextStage === STAGES.INITIAL){
+                let rec = await this.api.trade(this.baseCurrency, this.traded, this.fiatQuantity, 1/price);
+                this.quantityTraded = rec;
+                this.logger.info(`Bought ${this.quantityTraded} ${this.traded} at ${price}`);
+                res();
+            } else if(nextStage === STAGES.SOLD){
                 let rec = await this.api.trade(this.traded, this.baseCurrency, this.quantityTraded, price);
                 this.fiatQuantity = rec;
                 this.logger.info(`Sold ${this.quantityTraded} ${this.traded} at ${price}`);
                 res();
-            } else if(this.stage === STAGES.SOLD || this.stage === STAGES.IN_GAIN){
-                let rec = await this.api.trade(this.baseCurrency, this.traded, this.fiatQuantity, 1/price);
-                this.quantityTraded = rec;
-                this.logger.info(`Bought ${this.quantityTraded} ${this.traded} at ${price}`);
+            } else if(nextStage === STAGES.IN_GAIN){
+                this.logger.info(`No trade at ${price}`);
                 res();
             }
         })
