@@ -1,4 +1,4 @@
-const PriceHistory = require('./price-history/csv');
+const PriceHistory = require('../price-history/csv');
 const _ = require('lodash');
 class MockApi {
     constructor(logger, timeFrom, startingBalances, fee){

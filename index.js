@@ -1,5 +1,5 @@
 const SweetRebuy = require('./sweet-rebuy');
-const Api = require('./mock-api');
+const Api = require('./api/mock-api');
 
 let start = new Date(2018, 6, 1);
 let trail = 500;
