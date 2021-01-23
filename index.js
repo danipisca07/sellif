@@ -1,5 +1,6 @@
-const SweetRebuy = require('./sweet-rebuy');
+const SweetRebuy = require('./traders/sweet-rebuy');
 const Api = require('./api/mock-api');
+const PriceHistory = require('./price-history/coinapi');
 
 let start = new Date(2018, 6, 1);
 let trail = 500;
@@ -18,7 +19,7 @@ let interval = setInterval(() => {
     } else
         console.log("No data");
 
-}, 3000);
+}, 20000);
 
 let whenDone = async () => {
     clearInterval(interval);
@@ -27,7 +28,8 @@ let whenDone = async () => {
     process.exit(0);
 }
 
-let api = new Api(mocklog, start, balances, fee);
+let priceHistory = new PriceHistory(console, 'BTC', 'USD', start, 100);
+let api = new Api(mocklog, priceHistory, balances, fee);
 let strat = new SweetRebuy(console, api, trail, fee, whenDone);
 
 strat.run();

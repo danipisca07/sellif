@@ -62,6 +62,10 @@ class CsvPriceHistory {
         timestamp.day = date.getDate();
         return `${timestamp.year}-`+("00"+(timestamp.month+1)).slice(-2)+"-"+("00"+timestamp.day).slice(-2);
     }
+
+    static getStep() {
+        return { day: 1, hour: 0, minute: 0 };
+    }
 }
 
 module.exports = CsvPriceHistory;

@@ -8,14 +8,13 @@ const Cacher = require('../api/cacher');
 const { time } = require('console');
 const { reject } = require('lodash');
 class CoinApiPriceHistory {
-    constructor(logger, from, to, timeFrom=null, limit=100, exchange='binance'){
+    constructor(logger, from, to, timeFrom=null, limit=100){
         this.logger = logger;
         this.from = from;
         this.to = to;
         this.data = [];
         this.limit = limit;
         this.timeFrom = CoinApiPriceHistory.getTimestamp(timeFrom);     
-        this.exchange = exchange;   
         this.api_key = process.env.COINAPI_APIKEY;
     }
 
@@ -49,7 +48,11 @@ class CoinApiPriceHistory {
                 let req = `${COINAPI_URL}/${this.from}/${this.to}/history?${queryString}`;
                 let res = await Cacher.get(req);
                 let newData = res.data;
-                this.data.push(...newData);
+                newData.forEach(v => this.data.push(v));
+                this.timeFrom = newData[newData.length-1]['time_period_end'];
+                if(this.timeFrom === '2018-07-07T22:20:00.0000000Z')
+                    console.log("about to break");
+                //this.data.push(...newData);
                 resolve();
             } catch (err){
                 reject(err);
@@ -64,6 +67,10 @@ class CoinApiPriceHistory {
             date = new Date();
         }
         return date.toISOString();
+    }
+
+    static getStep() {
+       return { day: 0, hour: 0, minute: 1};
     }
 }
 

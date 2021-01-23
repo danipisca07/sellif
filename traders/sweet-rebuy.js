@@ -1,4 +1,4 @@
-const NoData = require("./Exceptions/NoData");
+const NoData = require("../Exceptions/NoData");
 
 const TIME_BETWEEN_UPDATES = 2;
 const STAGES = Object.freeze({
@@ -18,9 +18,10 @@ class sweetRebuy {
         this.trail = trail;
         this.stage = STAGES.INITIAL;
         this.fee = fee;
-        this.historyPrice = [];
+        // this.historyPrice = [];
         if(whenDone == null) whenDone = () => {};
         this.whenDone = whenDone;
+        this.runs = 0;
     }
     async run() {
         let currentPrice = await this.api.getCurrentPrice();
@@ -28,15 +29,34 @@ class sweetRebuy {
         this.stopLoss = currentPrice-this.trail;
         this.logger.info(`Initial stop loss set to: ${this.stopLoss}`);
         this.logger.info("__________");
-        this.interval = setInterval((() => {
-            this.check();
-        }).bind(this), TIME_BETWEEN_UPDATES);
+        this.stop = false;
+        // this.interval = setInterval((() => {
+        //     this.check();
+        // }).bind(this), TIME_BETWEEN_UPDATES);
+        while(!this.stop){
+            await this.check();
+            this.runs++;
+            if(this.runs % 10000 === 0){
+                if(this.api.getStep !== null){
+                    let step = this.api.getStep();
+                    let runtime = "";
+                    if(this.runs < 60) runtime = this.runs + " min";
+                    if(this.runs > 60 && this.runs < 24*60) runtime = this.runs/60 + " h";
+                    else runtime = this.runs/(60*24) + " d";
+                    this.logger.info(`runime: ${runtime}`);
+                    this.logger.info(this.api.api.data[0]['price_close']);
+                }
+                else
+                    this.logger.info("Run: " + this.runs);
+                this.logger.info("__________");
+            }
+        }
     }
     async check() {
         try {
             let currentPrice = await this.api.getCurrentPrice(this.traded);
-            this.historyPrice.push(currentPrice);
-            if(this.historyPrice.length > 50) this.historyPrice.shift();
+            // this.historyPrice.push(currentPrice);
+            // if(this.historyPrice.length > 50) this.historyPrice.shift();
             if (this.condition(currentPrice)) {
                 let nextStage = this.getNextStage(currentPrice);
                 let tradeok = await this.trade(currentPrice, nextStage);
@@ -147,7 +167,8 @@ class sweetRebuy {
     }
 
     stop() {
-        clearInterval(this.interval);
+        //clearInterval(this.interval);
+        this.stop = true;
     }
 
     getPriceToRebuyEven(priceOfLastSell, sellFee, buyFee) {

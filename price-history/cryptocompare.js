@@ -115,7 +115,9 @@ class CryptoComparePriceHistory {
         return Math.floor(x/3600)*3600;
     }
 
-
+    static getStep() {
+        return { day: 0, hour: 1, minute: 0 };
+    }
 }
 
 module.exports = CryptoComparePriceHistory;

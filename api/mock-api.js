@@ -1,9 +1,9 @@
-const PriceHistory = require('../price-history/csv');
+const PriceHistory = require('../price-history/coinapi')
 const _ = require('lodash');
 class MockApi {
-    constructor(logger, timeFrom, startingBalances, fee){
+    constructor(logger, priceHistory, startingBalances, fee){
         this.logger = logger;
-        this.api = new PriceHistory(console, "BTC", "USD", timeFrom, 100);
+        this.api = priceHistory,
         this.balances = startingBalances;
         this.balanceHistory = [_.clone(startingBalances)];
         this.trades = 0;
@@ -39,6 +39,10 @@ class MockApi {
 
     async getBalances(){
         return new Promise((res, rej) => res(this.balances));
+    }
+
+    getStep(){
+        return PriceHistory.getStep();
     }
 }
 

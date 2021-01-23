@@ -7,19 +7,16 @@ chai.use(require('chai-as-promised'));
 chai.use(sinonChai)
 
 // const PriceHistory = require('../price-history/csv.js');
-// let step = { day: 1, hour: 0, minute: 0};
 //const PriceHistory = require('../price-history/cryptocompare.js');
-// let step = { day: 0, hours: 1, minute: 0};
 // const PriceHistory = require('../price-history/cryptowatcher.js');
-// let step = { day: 0, hour: 0, minute: 1};
 const PriceHistory = require('../price-history/coinapi.js');
-let step = { day: 0, hour: 0, minute: 1};
 
 describe('PriceHistory', function() {
     this.timeout(60000);
     it('should return same time', async function() {
         var start = new Date(2018, 1, 1);
         let ph = new PriceHistory(console, "BTC", "USDT", start, 10);
+        let step = PriceHistory.getStep();
         for(let i=0; i<5; i++){
             let date = new Date(2018, 1, 1+step.day*i, 0+step.hour*i, 0+step.minute*i);
             let t = await ph.getPriceAndTime();
